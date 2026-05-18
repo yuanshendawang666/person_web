@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { authAPI } from '../api/endpoints'
 import { useRouter } from 'vue-router'
+import AvatarCropper from '../components/common/AvatarCropper.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -13,6 +14,8 @@ const pwMsg = ref('')
 const tags = ref([])
 const newTagName = ref('')
 const newTagColor = ref('#60a5fa')
+const cropFile = ref(null)
+const showCropper = ref(false)
 
 const presetColors = ['#60a5fa', '#34d399', '#fbbf24', '#f87171', '#a78bfa', '#f472b6', '#fb923c', '#22d3ee']
 
@@ -65,11 +68,18 @@ async function updatePassword() {
   }
 }
 
-async function uploadAvatar(e) {
+function pickAvatar(e) {
   const file = e.target.files[0]
   if (!file) return
+  cropFile.value = file
+  showCropper.value = true
+  e.target.value = '' // 清空以便重新选择同一文件
+}
+
+async function onCropConfirm(croppedFile) {
+  showCropper.value = false
   const fd = new FormData()
-  fd.append('avatar', file)
+  fd.append('avatar', croppedFile)
   try {
     await authAPI.uploadAvatar(fd)
     await auth.fetchUser()
@@ -85,7 +95,7 @@ async function uploadAvatar(e) {
 
       <div style="display:flex; align-items:center; gap:20px; margin-bottom:25px;">
         <div class="avatar" :style="auth.user?.avatar ? `background-image:url(${auth.user.avatar});background-size:cover` : ''"></div>
-        <label class="upload-label">更换头像<input type="file" accept="image/*" @change="uploadAvatar" hidden /></label>
+        <label class="upload-label">更换头像<input type="file" accept="image/*" @change="pickAvatar" hidden /></label>
       </div>
 
       <div class="field">
@@ -130,6 +140,8 @@ async function uploadAvatar(e) {
       <div v-if="pwMsg" :style="{ color: pwMsg.includes('成功') ? '#86efac' : '#f87171', marginBottom:'16px' }">{{ pwMsg }}</div>
       <button class="submit-btn" @click="updatePassword">修改密码</button>
     </div>
+
+    <AvatarCropper v-if="showCropper" :file="cropFile" @confirm="onCropConfirm" @cancel="showCropper = false" />
   </div>
 </template>
 

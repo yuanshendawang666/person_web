@@ -68,12 +68,11 @@ function isActive(path) {
     </div>
 
     <!-- 操作按钮 -->
-    <div class="actions-card glass-card" style="padding:14px;">
-      <template v-if="auth.isLoggedIn">
-        <button v-if="auth.isAdmin" class="act-btn primary" @click="router.push('/admin/publish')">✏️ 发布动态</button>
-        <button v-if="auth.isAdmin" class="act-btn approve" @click="router.push('/admin/users')">👥 用户审核</button>
-        <router-link to="/messages" class="act-btn msg-link">✉️ 私信</router-link>
-      </template>
+    <div v-if="auth.isLoggedIn" class="actions-card glass-card" style="padding:14px;">
+      <button v-if="auth.user?.id === 1" class="act-btn primary" @click="router.push('/admin/publish')">✏️ 发布动态</button>
+      <button v-if="auth.isAdmin" class="act-btn approve" @click="router.push('/admin/users')">👥 用户管理</button>
+      <router-link to="/messages" class="act-btn msg-link">✉️ 私信</router-link>
+      <button v-if="auth.user?.id !== 1" class="act-btn dm-admin" @click="router.push('/messages/1')">💌 私信站长</button>
     </div>
 
   </aside>
@@ -187,4 +186,26 @@ function isActive(path) {
   transition: all 0.25s;
 }
 .msg-link:hover { background: rgba(250,204,21,0.16); }
+.dm-admin {
+  display: block; width: 100%; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.25s; border: none; text-align: center; text-decoration: none; box-sizing: border-box; letter-spacing: 0.02em;
+  background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2); color: #fdba74;
+  margin-top: 6px;
+}
+.dm-admin:hover { background: rgba(251,146,60,0.2); }
+
+@media (max-width: 900px) {
+  aside {
+    position: fixed !important;
+    left: -320px; top: 0; bottom: 0;
+    width: 280px !important;
+    z-index: 150;
+    padding: 20px;
+    overflow-y: auto;
+    background: rgba(15,23,42,0.95);
+    backdrop-filter: blur(30px);
+    transition: left 0.3s ease;
+  }
+  aside.mobile-open { left: 0 !important; }
+}
 </style>

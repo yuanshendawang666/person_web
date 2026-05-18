@@ -7,7 +7,7 @@ import { postAPI, uploadAPI } from '../api/endpoints'
 const auth = useAuthStore()
 const router = useRouter()
 
-if (!auth.isAdmin) {
+if (auth.user?.id !== 1) {
   router.push('/')
 }
 

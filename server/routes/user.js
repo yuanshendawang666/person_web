@@ -101,4 +101,55 @@ router.put('/approve/:id', authRequired, adminRequired, async (req, res) => {
   }
 })
 
+// 管理员：获取所有用户列表（不含密码）
+router.get('/all', authRequired, adminRequired, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, username, email, realname, avatar, bio, role, status, created_at FROM users ORDER BY created_at DESC'
+    )
+    res.json({ users: rows })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: '服务器错误' })
+  }
+})
+
+// 仅 yuanshendawang 可提升管理员
+router.put('/promote/:id', authRequired, async (req, res) => {
+  try {
+    if (req.user.id !== 1) return res.status(403).json({ message: '仅站长可执行此操作' })
+    await pool.query('UPDATE users SET role = ? WHERE id = ?', ['admin', req.params.id])
+    res.json({ message: '已提升为管理员' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: '服务器错误' })
+  }
+})
+
+// 仅 yuanshendawang 可撤销管理员
+router.put('/demote/:id', authRequired, async (req, res) => {
+  try {
+    if (req.user.id !== 1) return res.status(403).json({ message: '仅站长可执行此操作' })
+    await pool.query('UPDATE users SET role = ? WHERE id = ?', ['user', req.params.id])
+    res.json({ message: '已撤销管理员权限' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: '服务器错误' })
+  }
+})
+
+// 管理员删除普通用户
+router.delete('/:id', authRequired, adminRequired, async (req, res) => {
+  try {
+    const [u] = await pool.query('SELECT role FROM users WHERE id = ?', [req.params.id])
+    if (!u.length) return res.status(404).json({ message: '用户不存在' })
+    if (u[0].role === 'admin') return res.status(403).json({ message: '不能删除管理员' })
+    await pool.query('DELETE FROM users WHERE id = ?', [req.params.id])
+    res.json({ message: '用户已删除' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: '服务器错误' })
+  }
+})
+
 export default router

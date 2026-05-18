@@ -1,31 +1,43 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { discussAPI } from '../api/endpoints'
 import api from '../api/index'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const toast = inject('toast', () => {})
 const discussion = ref(null)
 const replies = ref([])
 const newReply = ref('')
+const likeCount = ref(0)
+const liked = ref(false)
 
 async function fetch() {
   const { data } = await api.get(`/discuss/${route.params.id}`)
   discussion.value = data.discussion
   replies.value = data.replies
+  likeCount.value = data.discussion.like_count || 0
 }
 
 async function reply() {
   if (!newReply.value.trim()) return
+  if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核', 'error'); return }
   await api.post(`/discuss/${route.params.id}/reply`, { content: newReply.value })
-  newReply.value = ''
-  fetch()
+  newReply.value = ''; fetch()
+}
+
+async function toggleLike() {
+  if (!auth.isLoggedIn) { router.push('/login'); return }
+  if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核', 'error'); return }
+  if (liked.value) { await discussAPI.unlike(discussion.value.id); liked.value = false; likeCount.value-- }
+  else { await discussAPI.like(discussion.value.id); liked.value = true; likeCount.value++ }
 }
 
 async function del() {
-  await api.delete(`/discuss/${route.params.id}`)
+  await discussAPI.delete(discussion.value.id)
   router.push('/discuss')
 }
 

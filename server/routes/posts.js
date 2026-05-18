@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import pool from '../db.js'
-import { authRequired, adminRequired } from '../middleware/auth.js'
+import { authRequired } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -18,7 +18,7 @@ function getMediaQuery(userId) {
 // 获取动态列表
 router.get('/', async (req, res) => {
   try {
-    const { category } = req.query
+    const { category, sort } = req.query
     const userId = req.user?.id || 0
     let sql = getMediaQuery(userId)
     const params = [userId]
@@ -28,7 +28,15 @@ router.get('/', async (req, res) => {
       params.push(category)
     }
 
-    sql += ' ORDER BY p.created_at DESC'
+    const sortMap = {
+      'time_desc': 'p.created_at DESC',
+      'time_asc': 'p.created_at ASC',
+      'likes_desc': 'like_count DESC',
+      'likes_asc': 'like_count ASC',
+      'comments_desc': 'comment_count DESC',
+      'comments_asc': 'comment_count ASC',
+    }
+    sql += ' ORDER BY ' + (sortMap[sort] || 'p.created_at DESC')
 
     const [posts] = await pool.query(sql, params)
 
@@ -73,8 +81,9 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// 发布动态
-router.post('/', authRequired, adminRequired, async (req, res) => {
+// 发布动态（仅站长 yuanshendawang）
+router.post('/', authRequired, async (req, res) => {
+  if (req.user.id !== 1) return res.status(403).json({ message: '仅站长可发布动态' })
   try {
     const { title, content, category, images, videos, audios } = req.body
     if (!title || !category) {
@@ -107,8 +116,9 @@ router.post('/', authRequired, adminRequired, async (req, res) => {
   }
 })
 
-// 删除动态
-router.delete('/:id', authRequired, adminRequired, async (req, res) => {
+// 删除动态（仅站长）
+router.delete('/:id', authRequired, async (req, res) => {
+  if (req.user.id !== 1) return res.status(403).json({ message: '仅站长可删除动态' })
   try {
     await pool.query('DELETE FROM posts WHERE id = ?', [req.params.id])
     res.json({ message: '删除成功' })

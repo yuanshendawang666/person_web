@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { likeAPI } from '../../api/endpoints'
@@ -8,6 +8,7 @@ const props = defineProps({ post: Object })
 const emit = defineEmits(['updated'])
 const auth = useAuthStore()
 const router = useRouter()
+const toast = inject('toast', () => {})
 
 const liked = ref(props.post.liked_by_user || false)
 const likeCount = ref(Number(props.post.like_count) || 0)
@@ -31,6 +32,9 @@ async function toggleLike() {
   if (!auth.isLoggedIn) {
     router.push('/login')
     return
+  }
+  if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+    toast('账号尚未通过审核，暂不能点赞', 'error'); return
   }
   if (liked.value) {
     await likeAPI.unlike(props.post.id)
@@ -76,7 +80,7 @@ function goDetail() {
     </div>
 
     <div class="post-footer">
-      <span>{{ post.created_at?.slice(0, 10) }}</span>
+      <span><span class="post-author">{{ post.username }}</span> · {{ post.created_at?.slice(0, 10) }}</span>
       <span style="display:flex; gap:20px;">
         <span @click="toggleLike" :style="{ color: liked ? '#f87171' : '', cursor: 'pointer' }">
           ❤️ {{ likeCount }}
@@ -127,6 +131,10 @@ function goDetail() {
   max-height: 400px;
 }
 .audio-wrap { margin-top: 12px; }
+.post-author {
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+}
 .post-footer {
   margin-top: 20px;
   display: flex;

@@ -9,7 +9,8 @@ router.get('/', async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT d.*, u.username, u.avatar,
-        (SELECT COUNT(*) FROM discussion_replies WHERE discussion_id = d.id) AS reply_count
+        (SELECT COUNT(*) FROM discussion_replies WHERE discussion_id = d.id) AS reply_count,
+        (SELECT COUNT(*) FROM discuss_likes WHERE discussion_id = d.id) AS like_count
        FROM discussions d
        JOIN users u ON d.user_id = u.id
        ORDER BY d.created_at DESC`
@@ -72,6 +73,30 @@ router.post('/:id/reply', authRequired, approvedRequired, async (req, res) => {
       [req.params.id, req.user.id, content.trim()]
     )
     res.status(201).json({ id: r.insertId })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: '服务器错误' })
+  }
+})
+
+// 讨论点赞
+router.post('/:id/like', authRequired, approvedRequired, async (req, res) => {
+  try {
+    await pool.query('INSERT OR IGNORE INTO discuss_likes (discussion_id, user_id) VALUES (?, ?)', [req.params.id, req.user.id])
+    const [count] = await pool.query('SELECT COUNT(*) AS count FROM discuss_likes WHERE discussion_id = ?', [req.params.id])
+    res.json({ liked: true, like_count: count[0].count })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: '服务器错误' })
+  }
+})
+
+// 讨论取消点赞
+router.delete('/:id/like', authRequired, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM discuss_likes WHERE discussion_id = ? AND user_id = ?', [req.params.id, req.user.id])
+    const [count] = await pool.query('SELECT COUNT(*) AS count FROM discuss_likes WHERE discussion_id = ?', [req.params.id])
+    res.json({ liked: false, like_count: count[0].count })
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: '服务器错误' })

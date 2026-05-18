@@ -30,6 +30,25 @@ export const likeAPI = {
 
 export const commentAPI = {
   list: (postId) => api.get(`/posts/${postId}/comments`),
-  create: (postId, content) => api.post(`/posts/${postId}/comments`, { content }),
+  create: (postId, data) => api.post(`/posts/${postId}/comments`, data),
   delete: (id) => api.delete(`/comments/${id}`),
+}
+
+export const discussAPI = {
+  list: () => api.get('/discuss'),
+  detail: (id) => api.get(`/discuss/${id}`),
+  create: (data) => api.post('/discuss', data),
+  reply: (id, content) => api.post(`/discuss/${id}/reply`, { content }),
+  delete: (id) => api.delete(`/discuss/${id}`),
+  like: (id) => api.post(`/discuss/${id}/like`),
+  unlike: (id) => api.delete(`/discuss/${id}/like`),
+}
+
+export const userAPI = {
+  pending: () => api.get('/user/pending'),
+  all: () => api.get('/user/all'),
+  approve: (id) => api.put(`/user/approve/${id}`),
+  promote: (id) => api.put(`/user/promote/${id}`),
+  demote: (id) => api.put(`/user/demote/${id}`),
+  delete: (id) => api.delete(`/user/${id}`),
 }
