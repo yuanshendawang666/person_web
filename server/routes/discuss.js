@@ -7,14 +7,18 @@ const router = Router()
 // 讨论列表
 router.get('/', async (req, res) => {
   try {
+    const userId = req.user?.id || 0
     const [rows] = await pool.query(
       `SELECT d.*, u.username, u.avatar,
         (SELECT COUNT(*) FROM discussion_replies WHERE discussion_id = d.id) AS reply_count,
-        (SELECT COUNT(*) FROM discuss_likes WHERE discussion_id = d.id) AS like_count
+        (SELECT COUNT(*) FROM discuss_likes WHERE discussion_id = d.id) AS like_count,
+        (SELECT COUNT(*) FROM discuss_likes WHERE discussion_id = d.id AND user_id = ?) AS liked_by_user
        FROM discussions d
        JOIN users u ON d.user_id = u.id
-       ORDER BY d.created_at DESC`
+       ORDER BY d.created_at DESC`,
+      [userId]
     )
+    for (const d of rows) d.liked_by_user = d.liked_by_user > 0
     res.json({ discussions: rows })
   } catch (err) {
     console.error(err)
@@ -25,13 +29,17 @@ router.get('/', async (req, res) => {
 // 讨论详情
 router.get('/:id', async (req, res) => {
   try {
+    const userId = req.user?.id || 0
     const [rows] = await pool.query(
-      `SELECT d.*, u.username, u.avatar
+      `SELECT d.*, u.username, u.avatar,
+        (SELECT COUNT(*) FROM discuss_likes WHERE discussion_id = d.id) AS like_count,
+        (SELECT COUNT(*) FROM discuss_likes WHERE discussion_id = d.id AND user_id = ?) AS liked_by_user
        FROM discussions d JOIN users u ON d.user_id = u.id
        WHERE d.id = ?`,
-      [req.params.id]
+      [userId, req.params.id]
     )
     if (rows.length === 0) return res.status(404).json({ message: '不存在' })
+    rows[0].liked_by_user = rows[0].liked_by_user > 0
     const [replies] = await pool.query(
       `SELECT r.*, u.username, u.avatar
        FROM discussion_replies r JOIN users u ON r.user_id = u.id

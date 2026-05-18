@@ -20,6 +20,7 @@ async function fetch() {
   discussion.value = data.discussion
   replies.value = data.replies
   likeCount.value = data.discussion.like_count || 0
+  liked.value = data.discussion.liked_by_user || false
 }
 
 async function reply() {
@@ -63,8 +64,9 @@ onMounted(fetch)
           @click="del" style="background:none; border:none; color:#f87171; cursor:pointer;">删除</button>
       </div>
       <div style="margin-top:12px; color:rgba(255,255,255,0.7); white-space:pre-wrap;">{{ discussion.content }}</div>
-      <div style="margin-top:14px; font-size:13px; color:rgba(255,255,255,0.4);">
-        {{ discussion.username }} · {{ discussion.created_at?.slice(0,16) }}
+      <div style="margin-top:14px; font-size:13px; color:rgba(255,255,255,0.4); display:flex; gap:16px; align-items:center;">
+        <span>{{ discussion.username }} · {{ discussion.created_at?.slice(0,16) }}</span>
+        <span @click="toggleLike" :style="{ cursor:'pointer', color: liked ? '#f87171' : 'rgba(255,255,255,0.4)' }">❤️ {{ likeCount }}</span>
       </div>
     </div>
 

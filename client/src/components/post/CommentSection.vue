@@ -2,6 +2,7 @@
 import { ref, onMounted, inject } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { commentAPI, uploadAPI } from '../../api/endpoints'
+import api from '../../api/index'
 import { useRouter } from 'vue-router'
 
 const props = defineProps({ postId: Number })
@@ -10,6 +11,7 @@ const router = useRouter()
 const toast = inject('toast', () => {})
 const comments = ref([])
 const newComment = ref('')
+const replyTo = ref(null)
 const imgFiles = ref([])
 const vidFiles = ref([])
 const audFiles = ref([])
@@ -58,13 +60,44 @@ function dmUser(user) {
   if (user.id === auth.user?.id) { router.push('/profile'); return }
   router.push(`/messages/${user.id}`)
 }
+
+async function toggleCommentLike(c) {
+  if (!auth.isLoggedIn) { router.push('/login'); return }
+  if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+    await auth.fetchUser()
+    if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核', 'error'); return }
+  }
+  try {
+    if (c.liked_by_user) {
+      await api.delete(`/comments/${c.id}/like`)
+      c.liked_by_user = false
+      c.like_count = Math.max(0, (c.like_count || 0) - 1)
+    } else {
+      await api.post(`/comments/${c.id}/like`)
+      c.liked_by_user = true
+      c.like_count = (c.like_count || 0) + 1
+    }
+  } catch {}
+}
+
+function replyToComment(c) {
+  replyTo.value = c
+  newComment.value = `@${c.username} ` + newComment.value
+  // focus the textarea
+  const ta = document.querySelector('.comment-input-wrap textarea')
+  if (ta) ta.focus()
+}
 onMounted(fetchComments)
 </script>
 
 <template>
   <div class="comment-section">
     <div class="comment-input-wrap" v-if="auth.isLoggedIn">
-      <textarea v-model="newComment" @keydown="handleKey" placeholder="写下评论... Enter 发送，Shift+Enter 换行" rows="2"></textarea>
+      <div v-if="replyTo" class="reply-hint">
+        回复 <strong>{{ replyTo.username }}</strong>
+        <button @click="replyTo = null; newComment = ''" class="reply-cancel">✕ 取消</button>
+      </div>
+      <textarea v-model="newComment" @keydown="handleKey" :placeholder="replyTo ? `回复 ${replyTo.username}...` : '写下评论... Enter 发送，Shift+Enter 换行'" rows="2"></textarea>
       <div class="media-actions">
         <label class="cm-file-label">📷<input type="file" accept="image/*" multiple @change="imgFiles = Array.from($event.target.files)" hidden /></label>
         <label class="cm-file-label">🎬<input type="file" accept="video/*" multiple @change="vidFiles = Array.from($event.target.files)" hidden /></label>
@@ -89,6 +122,12 @@ onMounted(fetchComments)
             </span>
           </div>
           <div style="margin-top:4px; color:rgba(255,255,255,0.75); white-space:pre-wrap;">{{ c.content }}</div>
+          <div style="margin-top:8px; display:flex; gap:12px; align-items:center;">
+            <span @click="toggleCommentLike(c)" :style="{ cursor:'pointer', color: c.liked_by_user ? '#f87171' : 'rgba(255,255,255,0.35)', fontSize:'12px' }">
+              ❤️ {{ c.like_count || 0 }}
+            </span>
+            <span @click="replyToComment(c)" style="cursor:pointer; color:rgba(255,255,255,0.35); font-size:12px;">💬 回复</span>
+          </div>
           <!-- 评论媒体 -->
           <div v-if="c.images?.length" class="cm-imgs">
             <div v-for="(img,i) in c.images" :key="i" class="cm-img" :style="`background-image:url(${img.url})`" @click="previewUrl = img.url"></div>
@@ -111,6 +150,8 @@ export const previewUrl = vRef(null)
 
 <style scoped>
 .comment-input-wrap { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.reply-hint { font-size:12px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 8px; }
+.reply-cancel { background: none; border: none; color: #f87171; cursor: pointer; font-size: 12px; }
 .comment-input-wrap textarea {
   width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12); border-radius: 14px;

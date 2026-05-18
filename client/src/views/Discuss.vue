@@ -23,9 +23,12 @@ async function submit() {
 }
 async function toggleLike(d) {
   if (!auth.isLoggedIn) { router.push('/login'); return }
-  if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核', 'error'); return }
-  if (d.liked) { await discussAPI.unlike(d.id); d.liked = false; d.like_count-- }
-  else { await discussAPI.like(d.id); d.liked = true; d.like_count++ }
+  if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+    await auth.fetchUser()
+    if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核', 'error'); return }
+  }
+  if (d.liked_by_user) { await discussAPI.unlike(d.id); d.liked_by_user = false; d.like_count-- }
+  else { await discussAPI.like(d.id); d.liked_by_user = true; d.like_count++ }
 }
 onMounted(fetch)
 </script>
@@ -52,7 +55,7 @@ onMounted(fetch)
         <span>{{ d.username }}</span>
         <span>{{ d.created_at?.slice(0,10) }}</span>
         <span>💬 {{ d.reply_count||0 }}</span>
-        <span @click.stop="toggleLike(d)" style="cursor:pointer;color:rgba(255,255,255,0.4);">❤️ {{ d.like_count||0 }}</span>
+        <span @click.stop="toggleLike(d)" :style="{ cursor:'pointer', color: d.liked_by_user ? '#f87171' : 'rgba(255,255,255,0.4)' }">❤️ {{ d.like_count||0 }}</span>
       </div>
     </div>
     <div v-if="discussions.length===0" class="empty">暂无讨论，快来发起第一个话题吧</div>

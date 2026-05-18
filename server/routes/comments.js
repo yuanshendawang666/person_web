@@ -10,18 +10,20 @@ router.get('/posts/:postId/comments', async (req, res) => {
     const userId = req.user?.id || 0
     const [rows] = await pool.query(
       `SELECT c.*, u.username, u.avatar, u.id AS user_id,
-        (SELECT COUNT(*) FROM likes WHERE post_id = c.post_id) AS liked_by_user
+        (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) AS like_count,
+        (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND user_id = ?) AS liked_by_user
        FROM comments c
        JOIN users u ON c.user_id = u.id
        WHERE c.post_id = ?
        ORDER BY c.created_at ASC`,
-      [req.params.postId]
+      [userId, req.params.postId]
     )
     for (const c of rows) {
       const [media] = await pool.query('SELECT * FROM comment_media WHERE comment_id = ?', [c.id])
       c.images = media.filter(m => m.type === 'image')
       c.videos = media.filter(m => m.type === 'video')
       c.audios = media.filter(m => m.type === 'audio')
+      c.liked_by_user = c.liked_by_user > 0
     }
     res.json({ comments: rows })
   } catch (err) {
@@ -58,7 +60,8 @@ router.post('/posts/:postId/comments', authRequired, approvedRequired, async (re
     }
 
     const [rows] = await pool.query(
-      `SELECT c.*, u.username, u.avatar, u.id AS user_id
+      `SELECT c.*, u.username, u.avatar, u.id AS user_id,
+        0 AS like_count, 0 AS liked_by_user
        FROM comments c JOIN users u ON c.user_id = u.id
        WHERE c.id = ?`,
       [commentId]
@@ -89,6 +92,30 @@ router.delete('/comments/:id', authRequired, async (req, res) => {
 
     await pool.query('DELETE FROM comments WHERE id = ?', [req.params.id])
     res.json({ message: '评论已删除' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: '服务器错误' })
+  }
+})
+
+// 评论点赞
+router.post('/comments/:id/like', authRequired, approvedRequired, async (req, res) => {
+  try {
+    await pool.query('INSERT OR IGNORE INTO comment_likes (comment_id, user_id) VALUES (?, ?)', [req.params.id, req.user.id])
+    const [count] = await pool.query('SELECT COUNT(*) AS count FROM comment_likes WHERE comment_id = ?', [req.params.id])
+    res.json({ liked: true, like_count: count[0].count })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: '服务器错误' })
+  }
+})
+
+// 评论取消点赞
+router.delete('/comments/:id/like', authRequired, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?', [req.params.id, req.user.id])
+    const [count] = await pool.query('SELECT COUNT(*) AS count FROM comment_likes WHERE comment_id = ?', [req.params.id])
+    res.json({ liked: false, like_count: count[0].count })
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: '服务器错误' })
