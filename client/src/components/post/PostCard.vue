@@ -34,7 +34,10 @@ async function toggleLike() {
     return
   }
   if (auth.user?.status !== 'approved' && !auth.isAdmin) {
-    toast('账号尚未通过审核，暂不能点赞', 'error'); return
+    await auth.fetchUser()
+    if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+      toast('账号尚未通过审核，暂不能点赞', 'error'); return
+    }
   }
   if (liked.value) {
     await likeAPI.unlike(props.post.id)

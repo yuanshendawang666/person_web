@@ -20,7 +20,10 @@ async function fetchComments() {
 async function submitComment() {
   if (!auth.isLoggedIn) { router.push('/login'); return }
   if (auth.user?.status !== 'approved' && !auth.isAdmin) {
-    toast('账号尚未通过审核，暂不能评论', 'error'); return
+    await auth.fetchUser()
+    if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+      toast('账号尚未通过审核，暂不能评论', 'error'); return
+    }
   }
   if (!newComment.value.trim() && !imgFiles.value.length && !vidFiles.value.length && !audFiles.value.length) return
 

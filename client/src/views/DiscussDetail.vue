@@ -24,14 +24,20 @@ async function fetch() {
 
 async function reply() {
   if (!newReply.value.trim()) return
-  if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核', 'error'); return }
+  if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+    await auth.fetchUser()
+    if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核', 'error'); return }
+  }
   await api.post(`/discuss/${route.params.id}/reply`, { content: newReply.value })
   newReply.value = ''; fetch()
 }
 
 async function toggleLike() {
   if (!auth.isLoggedIn) { router.push('/login'); return }
-  if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核', 'error'); return }
+  if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+    await auth.fetchUser()
+    if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核', 'error'); return }
+  }
   if (liked.value) { await discussAPI.unlike(discussion.value.id); liked.value = false; likeCount.value-- }
   else { await discussAPI.like(discussion.value.id); liked.value = true; likeCount.value++ }
 }

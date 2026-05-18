@@ -14,7 +14,10 @@ const form = ref({ title: '', content: '' })
 async function fetch() { const { data } = await discussAPI.list(); discussions.value = data.discussions }
 async function submit() {
   if (!form.value.title.trim() || !form.value.content.trim()) return
-  if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核，暂不能发帖', 'error'); return }
+  if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+    await auth.fetchUser()
+    if (auth.user?.status !== 'approved' && !auth.isAdmin) { toast('账号尚未通过审核，暂不能发帖', 'error'); return }
+  }
   await discussAPI.create(form.value)
   form.value = { title: '', content: '' }; showForm.value = false; fetch()
 }
