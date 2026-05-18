@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "PingFang SC", "SF Pro Display", "Microsoft YaHei", sans-serif;
+  background:
+    radial-gradient(ellipse 90% 70% at 15% 5%, rgba(110,168,255,0.5) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 90% at 90% 90%, rgba(139,92,246,0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 60% at 40% 60%, rgba(236,72,153,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 30%, rgba(99,102,241,0.2) 0%, transparent 60%),
+    linear-gradient(170deg, #080d1a 0%, #0f172a 40%, #1a1030 100%);
+  min-height: 100vh;
+  color: #e2e8f0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.01em;
+}
+
+/* 背景光球 */
+.blur-ball {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(150px);
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.ball1 {
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(96,165,250,0.55), transparent);
+  top: -80px;
+  left: -100px;
+  animation: float1 20s ease-in-out infinite;
+}
+
+.ball2 {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(139,92,246,0.45), transparent);
+  right: -100px;
+  bottom: 8%;
+  animation: float2 25s ease-in-out infinite;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(80px, 50px) scale(1.06); }
+  66% { transform: translate(-40px, -30px) scale(0.94); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-60px, -70px) scale(1.1); }
+}
+
+/* 毛玻璃基础 */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 22px;
+  padding: 24px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* 分类标签 */
+.category-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+
+.category-life {
+  background: rgba(34, 197, 94, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(34,197,94,0.2);
+}
+
+.category-study {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59,130,246,0.2);
+}
+
+.category-game {
+  background: rgba(168, 85, 247, 0.15);
+  color: #d8b4fe;
+  border: 1px solid rgba(168,85,247,0.2);
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 选中文字 */
+::selection {
+  background: rgba(96,165,250,0.3);
+  color: white;
+}

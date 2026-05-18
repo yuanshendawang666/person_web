@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>星野の空间</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family: "PingFang SC", sans-serif;
+    background:
+        radial-gradient(circle at top left,#6ea8ff 0%,transparent 30%),
+        radial-gradient(circle at bottom right,#8f6bff 0%,transparent 30%),
+        linear-gradient(135deg,#0f172a,#1e293b);
+    min-height:100vh;
+    color:white;
+    overflow-x:hidden;
+}
+
+/* 背景模糊球 */
+
+.blur-ball{
+    position:fixed;
+    border-radius:50%;
+    filter:blur(120px);
+    opacity:.35;
+    z-index:-1;
+}
+
+.ball1{
+    width:300px;
+    height:300px;
+    background:#4f8cff;
+    top:-100px;
+    left:-100px;
+}
+
+.ball2{
+    width:300px;
+    height:300px;
+    background:#8b5cf6;
+    right:-100px;
+    bottom:-100px;
+}
+
+/* 页面 */
+
+.container{
+    width:1400px;
+    margin:auto;
+    padding:40px 0;
+    display:flex;
+    gap:25px;
+}
+
+/* 左边 */
+
+.sidebar{
+    width:320px;
+}
+
+.profile-card{
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:30px;
+    padding:30px;
+    box-shadow:0 10px 40px rgba(0,0,0,.2);
+}
+
+.avatar{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#60a5fa,#8b5cf6);
+    margin-bottom:20px;
+}
+
+.name{
+    font-size:32px;
+    font-weight:700;
+}
+
+.desc{
+    color:rgba(255,255,255,.7);
+    margin-top:10px;
+    line-height:1.7;
+}
+
+.tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:25px;
+}
+
+.tag{
+    padding:8px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.08);
+    font-size:14px;
+}
+
+/* 导航 */
+
+.menu{
+    margin-top:25px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.menu-item{
+    padding:16px 20px;
+    border-radius:18px;
+    background:rgba(255,255,255,.05);
+    transition:.3s;
+    cursor:pointer;
+}
+
+.menu-item:hover{
+    background:rgba(255,255,255,.12);
+    transform:translateX(5px);
+}
+
+/* 右边 */
+
+.content{
+    flex:1;
+}
+
+/* 顶部 */
+
+.topbar{
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:30px;
+    padding:25px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.top-title{
+    font-size:28px;
+    font-weight:700;
+}
+
+.top-desc{
+    margin-top:8px;
+    color:rgba(255,255,255,.6);
+}
+
+.publish-btn{
+    padding:14px 24px;
+    border:none;
+    border-radius:18px;
+    background:linear-gradient(135deg,#60a5fa,#8b5cf6);
+    color:white;
+    font-size:15px;
+    cursor:pointer;
+}
+
+/* 动态区域 */
+
+.feed{
+    margin-top:25px;
+    display:flex;
+    flex-direction:column;
+    gap:25px;
+}
+
+/* 卡片 */
+
+.post-card{
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:30px;
+    padding:28px;
+    transition:.3s;
+}
+
+.post-card:hover{
+    transform:translateY(-4px);
+    background:rgba(255,255,255,.11);
+}
+
+/* 分类 */
+
+.category{
+    display:inline-block;
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:13px;
+    margin-bottom:18px;
+}
+
+.life{
+    background:rgba(34,197,94,.2);
+    color:#86efac;
+}
+
+.study{
+    background:rgba(59,130,246,.2);
+    color:#93c5fd;
+}
+
+.game{
+    background:rgba(168,85,247,.2);
+    color:#d8b4fe;
+}
+
+.post-title{
+    font-size:26px;
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+.post-content{
+    line-height:1.9;
+    color:rgba(255,255,255,.75);
+}
+
+/* 图片区域 */
+
+.post-image{
+    margin-top:20px;
+    height:240px;
+    border-radius:24px;
+    background:
+        linear-gradient(135deg,
+        rgba(255,255,255,.12),
+        rgba(255,255,255,.03));
+}
+
+/* 底部 */
+
+.post-footer{
+    margin-top:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:rgba(255,255,255,.5);
+    font-size:14px;
+}
+
+/* 小卡片 */
+
+.grid{
+    margin-top:25px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+}
+
+.small-card{
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:24px;
+    padding:24px;
+}
+
+.small-card h3{
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+.small-card p{
+    color:rgba(255,255,255,.65);
+    line-height:1.7;
+}
+
+/* 响应式 */
+
+@media(max-width:1450px){
+
+.container{
+    width:95%;
+}
+
+}
+
+@media(max-width:1000px){
+
+.container{
+    flex-direction:column;
+}
+
+.sidebar{
+    width:100%;
+}
+
+.grid{
+    grid-template-columns:1fr;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="blur-ball ball1"></div>
+<div class="blur-ball ball2"></div>
+
+<div class="container">
+
+    <!-- 左边 -->
+
+    <aside class="sidebar">
+
+        <div class="profile-card">
+
+            <div class="avatar"></div>
+
+            <div class="name">星野</div>
+
+            <div class="desc">
+                记录生活、学习与游戏。<br>
+                像 QQ 空间一样，保存属于自己的互联网角落。
+            </div>
+
+            <div class="tags">
+                <div class="tag">前端</div>
+                <div class="tag">AI</div>
+                <div class="tag">游戏</div>
+                <div class="tag">日常</div>
+            </div>
+
+            <div class="menu">
+                <div class="menu-item">🏠 总空间</div>
+                <div class="menu-item">🌿 生活</div>
+                <div class="menu-item">📚 学习</div>
+                <div class="menu-item">🎮 游戏</div>
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- 右边 -->
+
+    <main class="content">
+
+        <!-- 顶部 -->
+
+        <div class="topbar">
+
+            <div>
+                <div class="top-title">总空间</div>
+                <div class="top-desc">
+                    所有模块动态都会同步显示在这里
+                </div>
+            </div>
+
+            <button class="publish-btn">
+                发布动态
+            </button>
+
+        </div>
+
+        <!-- 动态流 -->
+
+        <div class="feed">
+
+            <!-- 动态1 -->
+
+            <div class="post-card">
+
+                <div class="category life">
+                    🌿 生活
+                </div>
+
+                <div class="post-title">
+                    今天出去玩了
+                </div>
+
+                <div class="post-content">
+                    下午和朋友去了商场，吃了火锅，
+                    晚上还去看夜景了，感觉最近压力终于小了一点。
+                </div>
+
+                <div class="post-image"></div>
+
+                <div class="post-footer">
+                    <span>2026-05-17</span>
+                    <span>❤️ 52　💬 18</span>
+                </div>
+
+            </div>
+
+            <!-- 动态2 -->
+
+            <div class="post-card">
+
+                <div class="category study">
+                    📚 学习
+                </div>
+
+                <div class="post-title">
+                    今天开始做自己的空间网站
+                </div>
+
+                <div class="post-content">
+                    准备做一个类似 QQ 空间的个人动态网站，
+                    分成生活、学习、游戏三个模块，
+                    总空间聚合所有动态。
+                </div>
+
+                <div class="post-footer">
+                    <span>2026-05-17</span>
+                    <span>❤️ 88　💬 31</span>
+                </div>
+
+            </div>
+
+            <!-- 动态3 -->
+
+            <div class="post-card">
+
+                <div class="category game">
+                    🎮 游戏
+                </div>
+
+                <div class="post-title">
+                    黑神话第一章终于过了
+                </div>
+
+                <div class="post-content">
+                    被 Boss 折磨了整整两小时，
+                    终于打过去了，手都麻了。
+                </div>
+
+                <div class="post-image"></div>
+
+                <div class="post-footer">
+                    <span>2026-05-17</span>
+                    <span>❤️ 102　💬 46</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- 底部小模块 -->
+
+        <div class="grid">
+
+            <div class="small-card">
+                <h3>🌿 生活模块</h3>
+                <p>
+                    日常、照片、旅游、美食、
+                    现实中的记录都会放在这里。
+                </p>
+            </div>
+
+            <div class="small-card">
+                <h3>📚 学习模块</h3>
+                <p>
+                    编程、AI、笔记、
+                    项目开发过程与学习内容。
+                </p>
+            </div>
+
+            <div class="small-card">
+                <h3>🎮 游戏模块</h3>
+                <p>
+                    游戏截图、联机、
+                    MOD、成就与游戏日常。
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>

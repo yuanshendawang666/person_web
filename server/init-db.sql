@@ -1,0 +1,57 @@
+CREATE DATABASE IF NOT EXISTS person_web CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE person_web;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(50) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  avatar VARCHAR(255) DEFAULT NULL,
+  bio TEXT,
+  role ENUM('admin', 'user') DEFAULT 'user',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS posts (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(100) NOT NULL,
+  content TEXT,
+  category ENUM('life', 'study', 'game') NOT NULL,
+  author_id INT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS post_media (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  post_id INT NOT NULL,
+  type ENUM('image', 'video', 'audio') NOT NULL,
+  url VARCHAR(255) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS comments (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  content TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS likes (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_like (post_id, user_id),
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 插入默认 admin 账号 (密码: admin123)
+INSERT INTO users (username, email, password, role, bio) VALUES
+('星野', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin', '记录生活、学习与游戏。');
