@@ -2,7 +2,7 @@
 import { ref, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
-import { likeAPI } from '../../api/endpoints'
+import { likeAPI, postAPI } from '../../api/endpoints'
 
 const props = defineProps({ post: Object })
 const emit = defineEmits(['updated'])
@@ -50,6 +50,14 @@ async function toggleLike() {
   }
 }
 
+async function delPost() {
+  if (!confirm('确定删除这条动态？')) return
+  try {
+    await postAPI.delete(props.post.id)
+    emit('updated')
+  } catch { toast('删除失败', 'error') }
+}
+
 function goDetail() {
   router.push(`/post/${props.post.id}`)
 }
@@ -57,7 +65,10 @@ function goDetail() {
 
 <template>
   <div class="post-card glass-card">
-    <div class="category-tag" :class="categoryClass">{{ categoryLabel }}</div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="category-tag" :class="categoryClass">{{ categoryLabel }}</div>
+      <button v-if="auth.user?.id === 1" class="del-btn" @click="delPost">🗑 删除</button>
+    </div>
     <div class="post-title" @click="goDetail" style="cursor:pointer;">{{ post.title }}</div>
     <div class="post-content" v-if="post.content">{{ post.content }}</div>
 
@@ -100,6 +111,11 @@ function goDetail() {
 
 
 <style scoped>
+.del-btn {
+  background: none; border: 1px solid rgba(248,113,113,0.3); color: #f87171;
+  padding: 4px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;
+}
+.del-btn:hover { background: rgba(248,113,113,0.15); }
 .post-title {
   font-size: 26px;
   font-weight: 700;

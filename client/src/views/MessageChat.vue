@@ -1,11 +1,12 @@
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick, inject } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import api from '../api/index'
 
 const route = useRoute()
 const auth = useAuthStore()
+const toast = inject('toast', () => {})
 const messages = ref([])
 const newMsg = ref('')
 const chatUser = ref({})
@@ -33,9 +34,19 @@ async function fetch() {
 
 async function send() {
   if (!newMsg.value.trim()) return
-  await api.post('/messages', { to_id: chatUser.value.id, content: newMsg.value })
-  newMsg.value = ''
-  fetch()
+  if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+    await auth.fetchUser()
+    if (auth.user?.status !== 'approved' && !auth.isAdmin) {
+      toast('账号尚未通过审核，暂不能发送私信', 'error'); return
+    }
+  }
+  try {
+    await api.post('/messages', { to_id: chatUser.value.id, content: newMsg.value })
+    newMsg.value = ''
+    fetch()
+  } catch (e) {
+    toast(e.response?.data?.message || '发送失败', 'error')
+  }
 }
 
 function handleKey(e) {
